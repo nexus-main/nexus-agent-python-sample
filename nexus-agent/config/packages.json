@@ -1,0 +1,11 @@
+{
+  "5bd8d512-bbf6-4d54-9bff-9705bb04c99e": {
+    "provider": "local",
+    "configuration": {
+      "path": "/csv-reader-extension",
+      "version": "v1",
+      "entrypoint": "src",
+      "import": "foo.main"
+    }
+  }
+}

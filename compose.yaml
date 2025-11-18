@@ -1,0 +1,27 @@
+services:
+  
+  # http://localhost:5000/
+  nexus:
+    container_name: nexus
+    image: docker.io/nexusmain/nexus:2.0.0-beta.52
+    volumes:
+      - ./nexus:/home/app/.local/share/nexus
+    ports:
+      - "5000:5000"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 5000
+    restart: always
+
+  # http://localhost:8000/docs
+  nexus-agent-python:
+    container_name: nexus-agent-python
+    image: docker.io/nexusmain/nexus-agent-python:2.0.0-beta.57
+    volumes:
+      - ./nexus-agent:/home/app/.local/share/nexus-agent
+      - ./csv-reader-extension:/csv-reader-extension
+      - ./data:/var/lib/data:ro
+    ports:
+      - "56145:56145"
+      - "8000:8000"
+    restart: always

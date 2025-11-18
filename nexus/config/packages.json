@@ -1,0 +1,10 @@
+{
+  "fd36edab-1190-46f3-a6a9-974d6fbae7e9": {
+    "Provider": "git-tag",
+    "Configuration": {
+      "repository": "https://github.com/nexus-main/nexus-sources-remote",
+      "tag": "v2.0.0-beta.54",
+      "entrypoint": "src/Nexus.Sources.Remote/Nexus.Sources.Remote.csproj"
+    }
+  }
+}
