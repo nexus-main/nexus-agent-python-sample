@@ -18,7 +18,7 @@ class TestLogger(ILogger):
 async def test_enrich_catalog():
 
     # Arrange
-    reader = CsvReader()
+    csv_reader = CsvReader()
     settings = CsvReaderSettings(dummy="dummy")
 
     context = DataSourceContext[CsvReaderSettings](
@@ -29,10 +29,10 @@ async def test_enrich_catalog():
 
     logger = TestLogger()
 
-    await reader.set_context(context, logger)
+    await csv_reader.set_context(context, logger)
 
     # Act
-    catalog = await reader.enrich_catalog(ResourceCatalog("/A/B/C"))
+    catalog = await csv_reader.enrich_catalog(ResourceCatalog("/A/B/C"))
 
     # Assert
     assert catalog.resources
@@ -44,7 +44,7 @@ async def test_enrich_catalog():
 async def test_read():
 
     # Arrange
-    reader = CsvReader()
+    csv_reader = CsvReader()
     settings = CsvReaderSettings(dummy="dummy")
 
     context = DataSourceContext[CsvReaderSettings](
@@ -55,8 +55,8 @@ async def test_read():
 
     logger = TestLogger()
 
-    await reader.set_context(context, logger)
-    catalog = await reader.enrich_catalog(ResourceCatalog("/A/B/C"))
+    await csv_reader.set_context(context, logger)
+    catalog = await csv_reader.enrich_catalog(ResourceCatalog("/A/B/C"))
     assert catalog.resources
 
     begin = datetime(2020, 1, 1, 0, 0, tzinfo=timezone.utc)
@@ -113,7 +113,7 @@ async def test_read():
     read_requests = [read_request_1, read_request_2]
 
     # Act
-    await reader.read(
+    await csv_reader.read(
         begin=begin,
         end=end,
         requests=read_requests,
