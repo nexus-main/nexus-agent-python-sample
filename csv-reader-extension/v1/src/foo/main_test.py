@@ -1,8 +1,11 @@
+from datetime import datetime, timezone
+from pathlib import Path
 from urllib.parse import urlparse
 
 import pytest
-from nexus_extensibility import (DataSourceContext, ILogger,  # type: ignore
-                                 LogLevel, ResourceCatalog)
+from nexus_extensibility import (CatalogItem,  # type: ignore
+                                 DataSourceContext, ILogger, LogLevel,
+                                 ReadRequest, ResourceCatalog)
 
 from .main import CsvReader, CsvReaderSettings
 
@@ -19,7 +22,7 @@ async def test_enrich_catalog():
     settings = CsvReaderSettings(dummy="dummy")
 
     context = DataSourceContext[CsvReaderSettings](
-        resource_locator=urlparse("file:///data"),
+        resource_locator=urlparse((Path(__file__).parent / "../../../../data").resolve().as_uri()),
         source_configuration=settings,
         request_configuration=None
     )
@@ -37,107 +40,102 @@ async def test_enrich_catalog():
     assert "wind_speed" in resource_ids
     assert "wind_direction" in resource_ids
 
-# @pytest.mark.asyncio
-# async def test_read_csv_range(tmp_path):
-#     # Arrange
-#     reader = main.CsvReader()
+@pytest.mark.asyncio
+async def test_read():
 
-#     # Fake context with resource locator path pointing to existing data folder
-#     data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "data"))
+    # Arrange
+    reader = CsvReader()
+    settings = CsvReaderSettings(dummy="dummy")
 
-#     class ResourceLocator:
-#         def __init__(self, path: str):
-#             self.path = path
+    context = DataSourceContext[CsvReaderSettings](
+        resource_locator=urlparse((Path(__file__).parent / "../../../../data").resolve().as_uri()),
+        source_configuration=settings,
+        request_configuration=None
+    )
 
-#     class Context:
-#         def __init__(self, rl):
-#             self.resource_locator = rl
+    logger = TestLogger()
 
-#     reader.Context = Context(ResourceLocator(data_dir))
+    await reader.set_context(context, logger)
+    catalog = await reader.enrich_catalog(ResourceCatalog("/A/B/C"))
+    assert catalog.resources
 
-#     # Build catalog (reuse production method)
-#     class DummyCatalog:
-#         def __init__(self, id: str):
-#             self.id = id
+    begin = datetime(2020, 1, 1, 0, 0, tzinfo=timezone.utc)
+    end = datetime(2020, 1, 2, 0, 0, tzinfo=timezone.utc)
 
-#     catalog = await reader.enrich_catalog(DummyCatalog("/A/B/C"))
+    # -> read_request 1 (wind_speed)
+    resource = catalog.resources[0]
 
-#     # Helper: create minimal catalog_item objects
-#     class CatalogItem:
-#         def __init__(self, catalog, resource, representation):
-#             self.catalog = catalog
-#             self.resource = resource
-#             self.representation = representation
+    assert resource.representations
+    representation = resource.representations[0]
 
-#     wind_speed_res = next(r for r in catalog.resources if r.id == "wind_speed")
-#     wind_dir_res = next(r for r in catalog.resources if r.id == "wind_direction")
+    catalog_item = CatalogItem(
+        catalog,
+        resource,
+        representation,
+        parameters=None
+    )
 
-#     rep_speed = wind_speed_res.representations[0]
-#     rep_dir = wind_dir_res.representations[0]
+    samples = int((end - begin) / representation.sample_period)
+    data_wind_speed = memoryview(bytearray(samples * representation.element_size))
+    status_wind_speed = memoryview(bytearray(samples))
 
-#     # Time range (first 2 hours of 2020-01-01)
-#     begin = datetime(2020, 1, 1, 0, 10, tzinfo=timezone.utc)
-#     end = datetime(2020, 1, 1, 2, 0, tzinfo=timezone.utc)  # exclusive
-#     sample_period: timedelta = rep_speed.sample_period
-#     samples = int((end - begin) / sample_period)
+    read_request_1 = ReadRequest(
+        resource.id,
+        catalog_item,
+        data_wind_speed,
+        status_wind_speed
+    )
 
-#     # Allocate buffers
-#     data_speed = bytearray(samples * 8)
-#     data_dir = bytearray(samples * 8)
-#     status_speed = bytearray(samples)
-#     status_dir = bytearray(samples)
+    # -> read_request 2 (wind_direction)
+    resource = catalog.resources[1]
 
-#     # Dummy ReadRequest objects matching interface used in main.py
-#     class ReadRequest:
-#         def __init__(self, resource_id, catalog_item, data, status):
-#             self.resource_id = resource_id
-#             self.catalog_item = catalog_item
-#             self.data = memoryview(data)
-#             self.status = memoryview(status)
+    assert resource.representations
+    representation = resource.representations[0]
 
-#     req_speed = ReadRequest("wind_speed", CatalogItem(catalog, wind_speed_res, rep_speed), data_speed, status_speed)
-#     req_dir = ReadRequest("wind_direction", CatalogItem(catalog, wind_dir_res, rep_dir), data_dir, status_dir)
+    catalog_item = CatalogItem(
+        catalog,
+        resource,
+        representation,
+        parameters=None
+    )
 
-#     progress_events = []
+    samples = int((end - begin) / representation.sample_period)
+    data_wind_dir = memoryview(bytearray(samples * representation.element_size))
+    status_wind_dir = memoryview(bytearray(samples))
 
-#     def report_progress(p: float):
-#         progress_events.append(p)
+    read_request_2 = ReadRequest(
+        resource.id,
+        catalog_item,
+        data_wind_dir,
+        status_wind_dir
+    )
 
-#     # Act
-#     await reader.read(begin, end, [req_speed, req_dir], lambda *args, **kwargs: None, report_progress)
+    read_requests = [read_request_1, read_request_2]
 
-#     # Assert: derive expected values from CSV file (column indices 1 and 2)
-#     expected_speed = []
-#     expected_dir = []
+    # Act
+    await reader.read(
+        begin=begin,
+        end=end,
+        requests=read_requests,
+        read_data=None, # type: ignore
+        report_progress=lambda x: None
+    )
 
-#     file_path = os.path.join(data_dir, "2020-01-01.csv")
-#     with open(file_path, newline="") as f:
-#         r = csv.reader(f)
-#         _ = next(r, None)
-#         for row in r:
-#             row_time = datetime.strptime(f"2020-01-01 {row[0]}", "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
-#             if row_time < begin or row_time >= end:
-#                 continue
-#             expected_speed.append(float(row[1]))
-#             expected_dir.append(float(row[2]))
+    # Assert
+    expected_wind_speed = [4.7, 5.2]
+    actual_wind_speed = data_wind_speed.cast('d')
 
-#     assert len(expected_speed) == samples
-#     assert len(expected_dir) == samples
+    assert expected_wind_speed[0] == actual_wind_speed[0]
+    assert expected_wind_speed[1] == actual_wind_speed[1]
 
-#     import array, struct
+    assert status_wind_speed[0] == 1
+    assert status_wind_speed[1] == 1
+    
+    expected_wind_dir = [306, 310]
+    actual_wind_dir = data_wind_dir.cast('d')
 
-#     speed_values = array.array('d')
-#     dir_values = array.array('d')
-#     speed_values.frombytes(req_speed.data.tobytes())
-#     dir_values.frombytes(req_dir.data.tobytes())
+    assert expected_wind_dir[0] == actual_wind_dir[0]
+    assert expected_wind_dir[1] == actual_wind_dir[1]
 
-#     # Compare populated entries only (status == 1)
-#     for i in range(samples):
-#         if req_speed.status[i] == 1:
-#             assert speed_values[i] == expected_speed[i]
-#         if req_dir.status[i] == 1:
-#             assert dir_values[i] == expected_dir[i]
-
-#     # Ensure all samples in range got filled
-#     assert all(s == 1 for s in req_speed.status)
-#     assert all(s == 1 for s in req_dir.status)
+    assert status_wind_dir[0] == 1
+    assert status_wind_dir[1] == 1
