@@ -1,0 +1,18 @@
+{
+  "f0d053c9-15a3-4b92-b954-1033996e440f": {
+    "registrations": [
+      {
+        "type": "Nexus.Sources.Remote",
+        "resourceLocator": "file:///data",
+        "configuration": {
+          "remoteUrl": "tcp://nexus-agent-python:56145",
+          "remoteType": "foo.main.CsvReader",
+          "remoteConfiguration": null
+        },
+        "infoUrl": null
+      }
+    ],
+    "releasePattern": null,
+    "visibilityPattern": null
+  }
+}
