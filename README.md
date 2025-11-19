@@ -1,8 +1,8 @@
-This is a short sample about how to create Python extensions for `Nexus` using the [Nexus.Agent for Python](https://github.com/nexus-main/nexus-sources-remote/tree/master/src/agent/python).
+This brief example shows how to build Python extensions for `Nexus` using the [Nexus.Agent for Python](https://github.com/nexus-main/nexus-sources-remote/tree/master/src/agent/python).
 
 # Run
 
-Run the following command to launch the preconfigured instances of `Nexus` and `Nexus.Agent`:
+Start the preconfigured `Nexus` and `Nexus.Agent` containers:
 
 ```bash
 podman-compose up -d
@@ -11,11 +11,11 @@ podman-compose up -d
 docker-compose up -d
 ```
 
-You should now be able to open the web page of [Nexus](http:/localhost:5000/) and the Swagger UI of [Nexus.Agent](http://localhost:8000/docs).
+Once the containers are running, open the Nexus web UI at [http://localhost:5000/](http://localhost:5000/) and the Nexus.Agent Swagger UI at [http://localhost:8000/docs](http://localhost:8000/docs).
 
 # Develop
 
-To edit the python extension in an editor, create a virtual environment and install the requirements first:
+To develop the Python extension, create a virtual environment and install the dependencies:
 
 ```bash
 python -m venv .venv
