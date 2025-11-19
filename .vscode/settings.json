@@ -1,0 +1,7 @@
+{
+    "python.testing.pytestArgs": [
+        "csv-reader-extension"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}

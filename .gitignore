@@ -3,3 +3,5 @@ nexus/config/data-protection-keys
 nexus/config/users.db*
 nexus/packages
 nexus-agent/packages
+
+*.pyc

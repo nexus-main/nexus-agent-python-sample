@@ -1,1 +1,3 @@
 nexus-extensibility==2.0.0-b50
+pytest
+pytest-asyncio

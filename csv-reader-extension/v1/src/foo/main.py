@@ -13,7 +13,7 @@ from nexus_extensibility import (CatalogRegistration, LogLevel, NexusDataType, #
 
 @dataclass(frozen=True)
 class CsvReaderSettings():
-    log_message: str
+    dummy: str
 
 class CsvReader(SimpleDataSource[CsvReaderSettings]):
     
