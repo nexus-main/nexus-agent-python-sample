@@ -4,13 +4,13 @@ import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Callable, cast
+from urllib.request import url2pathname
 
 from nexus_extensibility import (CatalogRegistration, LogLevel,  # type: ignore
                                  NexusDataType, ReadDataHandler, ReadRequest,
                                  Representation, ResourceBuilder,
                                  ResourceCatalog, ResourceCatalogBuilder,
                                  SimpleDataSource)
-from nturl2path import url2pathname
 
 
 @dataclass(frozen=True)
