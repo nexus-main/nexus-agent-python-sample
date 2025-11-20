@@ -5,10 +5,12 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Callable, cast
 
-from nexus_extensibility import (CatalogRegistration, LogLevel, NexusDataType, # type: ignore
-                                 ReadDataHandler, ReadRequest, Representation,
-                                 ResourceBuilder, ResourceCatalog,
-                                 ResourceCatalogBuilder, SimpleDataSource)
+from nexus_extensibility import (CatalogRegistration, LogLevel,  # type: ignore
+                                 NexusDataType, ReadDataHandler, ReadRequest,
+                                 Representation, ResourceBuilder,
+                                 ResourceCatalog, ResourceCatalogBuilder,
+                                 SimpleDataSource)
+from nturl2path import url2pathname
 
 
 @dataclass(frozen=True)
@@ -102,7 +104,7 @@ class CsvReader(SimpleDataSource[CsvReaderSettings]):
         if self.Context.resource_locator is None:
             raise Exception(f"No resource locator provided.")
     
-        root_path = self._root = self.Context.resource_locator.path
+        root_path = self._root = url2pathname(self.Context.resource_locator.path)
         search_pattern = os.path.join(root_path, "*.csv")
         file_paths = glob.glob(search_pattern, recursive=True)
 
